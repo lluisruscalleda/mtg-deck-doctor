@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MTG Deck Doctor</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    <div class="page">
+      <header class="site-header">
+        <div class="brand-block">
+          <p class="brand">MTG Deck Doctor</p>
+          <p class="tagline">
+            Old School Swedish focused: submit a deck, get stats and grounded recommendations.
+          </p>
+        </div>
+        <a class="docs-link" href="/docs" target="_blank" rel="noopener">API docs</a>
+      </header>
+
+      <section class="panel" aria-labelledby="deck-form-title">
+        <h2 id="deck-form-title">Analyze a deck</h2>
+        <form id="deck-form" novalidate>
+          <div class="field-row">
+            <label for="deck-name">Deck name</label>
+            <input id="deck-name" name="name" type="text" maxlength="120" required placeholder="Burn test" />
+          </div>
+
+          <div class="field-row two-col">
+            <div>
+              <label for="deck-format">Format</label>
+              <select id="deck-format" name="format" required>
+                <option value="old_school_swedish" selected>Old School Swedish</option>
+                <option value="modern">Modern</option>
+                <option value="commander">Commander</option>
+                <option value="standard">Standard</option>
+                <option value="pioneer">Pioneer</option>
+                <option value="legacy">Legacy</option>
+                <option value="vintage">Vintage</option>
+                <option value="pauper">Pauper</option>
+                <option value="custom">Custom</option>
+              </select>
+            </div>
+            <div>
+              <label for="budget">Budget (USD)</label>
+              <input id="budget" name="budget" type="number" min="0" step="1" value="30" required />
+            </div>
+          </div>
+
+          <div class="field-row two-col">
+            <div>
+              <label for="rec-count">Recommendations</label>
+              <input id="rec-count" name="recommendation_count" type="number" min="1" max="3" value="3" required />
+            </div>
+          </div>
+
+          <div class="field-row">
+            <label for="card-list">Card list</label>
+            <textarea
+              id="card-list"
+              name="cards"
+              rows="10"
+              required
+              placeholder="4 Lightning Bolt&#10;4 Monastery Swiftspear&#10;20 Mountain"
+            ></textarea>
+            <p class="hint">One card per line: <code>4 Lightning Bolt</code></p>
+          </div>
+
+          <p id="form-error" class="error" hidden></p>
+
+          <div class="actions">
+            <button type="submit" id="submit-btn" class="btn-primary">Analyze deck</button>
+            <button type="button" id="retry-btn" class="btn-secondary" hidden>Retry analysis</button>
+          </div>
+        </form>
+      </section>
+
+      <section class="panel" id="progress-panel" hidden aria-live="polite">
+        <h2>Analysis progress</h2>
+        <p id="progress-status" class="status-line">Waiting…</p>
+        <div class="progress-track" aria-hidden="true">
+          <div id="progress-bar" class="progress-fill"></div>
+        </div>
+        <ul id="progress-log" class="progress-log"></ul>
+      </section>
+
+      <section class="panel" id="result-panel" hidden>
+        <h2>Results</h2>
+        <p id="result-summary" class="summary"></p>
+
+        <div class="metrics-grid" id="metrics-grid"></div>
+
+        <div class="split">
+          <div>
+            <h3>Strengths</h3>
+            <ul id="strengths-list"></ul>
+          </div>
+          <div>
+            <h3>Weaknesses</h3>
+            <ul id="weaknesses-list"></ul>
+          </div>
+        </div>
+
+        <h3>Recommendations</h3>
+        <div id="recommendations" class="recommendations"></div>
+
+        <h3>Warnings</h3>
+        <ul id="warnings-list" class="warnings"></ul>
+      </section>
+
+      <section class="panel" id="error-panel" hidden>
+        <h2>Analysis failed</h2>
+        <p id="error-message" class="error"></p>
+      </section>
+    </div>
+    <script src="/static/app.js"></script>
+  </body>
+</html>

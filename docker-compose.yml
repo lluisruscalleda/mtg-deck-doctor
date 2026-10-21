@@ -1,0 +1,103 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: mtg
+      POSTGRES_PASSWORD: mtg
+      POSTGRES_DB: mtg_deck_doctor
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mtg -d mtg_deck_doctor"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  rabbitmq:
+    image: rabbitmq:3.13-management-alpine
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "-q", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  migrate:
+    build: .
+    command: ["alembic", "upgrade", "head"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://mtg:mtg@postgres:5432/mtg_deck_doctor
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: "no"
+
+  api:
+    build: .
+    command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "55700"]
+    env_file:
+      - .env.example
+    environment:
+      DATABASE_URL: postgresql+asyncpg://mtg:mtg@postgres:5432/mtg_deck_doctor
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+      APP_ENV: development
+    ports:
+      - "55700:55700"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:55700/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  worker:
+    build: .
+    command: ["python", "-m", "app.workers.analysis_worker"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://mtg:mtg@postgres:5432/mtg_deck_doctor
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+  outbox-publisher:
+    build: .
+    command: ["python", "-m", "app.workers.outbox_publisher"]
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql+asyncpg://mtg:mtg@postgres:5432/mtg_deck_doctor
+      RABBITMQ_URL: amqp://guest:guest@rabbitmq:5672/
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      migrate:
+        condition: service_completed_successfully
+
+volumes:
+  postgres_data:
+  rabbitmq_data:
