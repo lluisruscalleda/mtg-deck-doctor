@@ -250,6 +250,10 @@ Then retry from the UI or `POST .../analyses`.
 - Format legality via Scryfall / MTGJSON
 - Richer candidate selection (archetype-aware)
 
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## License
 
 [MIT](LICENSE)
